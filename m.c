@@ -6,18 +6,19 @@ int main()
 {
 pid_t pid, ppid;
 
+int pid = getpid();
+fork();
 
-(void)fork();
-
-pid = fork();
-
-if (pid == -1) {
+if (getppid() == -1)
+{
     perror("fork");
      exit(1);
-} else if (pid == 0) {
-     printf("PID ребенка  %d\n", getpid());
-} else {
-     printf("PID родителя  %d\n", getpid());
+} else if (pid == 0)
+{
+     printf("PID ребенка  %d\n", (int)getpid());
+} else 
+{
+     printf("PID родителя  %d\n",(int)getpid());
 }
 return 0;
 }
