@@ -6,7 +6,7 @@ int main()
 {
 pid_t pid, ppid;
 
-int pid = getpid();
+pid = getpid();
 fork();
 
 if (getppid() == -1)
