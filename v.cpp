@@ -4,8 +4,13 @@
 
 int main(int argc, char *argv[], char **envp)
 {
+      for (int i = 0; i < argc; i++) 
+       {
+        printf("Argument [%d]: %s\n", i, argv[i]);
+       }
     while (*envp)
-        printf("Argument: %s\n", *envp++);
-
+    {
+        printf("Environment: %s\n", *envp++);
+    }
     return 0;
 }
