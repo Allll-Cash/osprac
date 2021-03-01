@@ -19,7 +19,6 @@ int main()
 
     int size = 0;
 
-    // Взято с примера
     if ((shmid = shmget(key, sizeof(int) + size * sizeof(char), 0666|IPC_CREAT)) < 0) {
         
         printf("Unable create shared memory\n");
