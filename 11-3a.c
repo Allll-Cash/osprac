@@ -1,19 +1,18 @@
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
 int main() {
     // IPC descriptor для очереди сообщений
     int msqid;
+    pid_t getpid(void);
 
     // IPC-ключ и название фвйла для генерации
     key_t key;
-    char pathname[] = "11-3a.c";
+    char pathname[] = "11-3b.c";
 
     // Длина полезной части сообщения
     int len, maxlen;
@@ -46,38 +45,36 @@ int main() {
         exit(-1);
     }
 
-    // В бесконечном цикле читаем сообщения
-    // В порядке FIFO (First In - First Out, как в обычной очереди)
-    while (1) {
-        // Задаем максимально возможную длину полезной чати сообщения
-        maxlen = sizeof(mybuf.info);
+    // Заполняем сообщение данными
+    mybuf.mtype = 1;
+    mybuf.info.pid = getpid();
 
-        // Пробуем прочесть сообщение из очереди
-        if ((len = msgrcv(msqid, (struct msgbuf *)&mybuf, maxlen, 1, 0)) < 0) {
-            printf("Can't receive message from queue\n");
-            exit(-1);
-        }
+    // Считываем число
+    printf("Enter float number: ");
+    scanf("%f", &(mybuf.info.finfo));
 
-        printf("Request from client %d\n", mybuf.info.pid);
+    // Определяем длину полезной части
+    len = sizeof(mybuf.info);
 
-        // Заполняем сообщение данными
-        myservbuf.mtype = mybuf.info.pid;
-
-        // Считаем результат
-        myservbuf.finfo = mybuf.info.finfo * mybuf.info.finfo;
-
-        // Определяем длину полезной части
-        len = sizeof(myservbuf.finfo);
-
-        // Отправляем сообщение в очередь
-        if (msgsnd(msqid, (struct servmsggbuf *)&myservbuf, len, 0) < 0) {
-            printf("Can't send message to queue\n");
-            msgctl(msqid, IPC_RMID, (struct msqid_ds *)NULL);
-            exit(-1);
-        }
-
-        printf("\nResponded\n");
+    // Отправляем сообщение в очередь
+    if (msgsnd(msqid, (struct msgbuf *) &mybuf, len, 0) < 0) {
+        printf("Can\'t send message to queue\n");
+        msgctl(msqid, IPC_RMID, (struct msqid_ds *) NULL);
+        exit(-1);
     }
+
+    printf("Message from %d was sent.\n", getpid());
+
+    // Задаем максимально возможную длину полезной чати сообщения
+    maxlen = sizeof(myservbuf.finfo);
+
+    // Пробуем прочесть сообщение из очереди
+    if ((len = msgrcv(msqid, &myservbuf, maxlen, getpid(), 0)) < 0) {
+        printf("Can't receive message from queue\n");
+        exit(-1);
+    }
+
+    printf("Response:\t%f\n", myservbuf.finfo);
 
     return 0;
 }
