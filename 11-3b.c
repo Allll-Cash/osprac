@@ -12,7 +12,7 @@ int main() {
 
     // IPC-ключ и название фвйла для генерации
     key_t key;
-    char pathname[] = "task03-1.c";
+    char pathname[] = "11-3b.c";
 
     // Длина полезной части сообщения
     int len, maxlen;
