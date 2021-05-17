@@ -13,7 +13,7 @@ int main() {
 
     // IPC-ключ и название фвйла для генерации
     key_t key;
-    char pathname[] = "11-3a.c";
+    char pathname[] = "11-3b.c";
 
     // Длина полезной части сообщения
     int len, maxlen;
