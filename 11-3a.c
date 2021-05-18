@@ -4,77 +4,63 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
 
-int main() {
-    // IPC descriptor для очереди сообщений
+struct Client {
+    long mtype;
+    struct {
+        pid_t pid;
+        double num;
+    } message;
+} client;
+
+struct Server {
+    long mtype;
+    struct {
+        double num;
+    } message;
+} server;
+
+
+int main(void) {
     int msqid;
-    pid_t getpid(void);
-
-    // IPC-ключ и название фвйла для генерации
-    key_t key;
     char pathname[] = "11-3b.c";
+    key_t key;
 
-    // Длина полезной части сообщения
-    int len, maxlen;
-
-    // Структура сообщения
-    struct msgbuf {
-        long mtype;
-        struct {
-            pid_t pid;
-            float finfo;
-        } info;
-    } mybuf;
-
-    // Структура сообщения сервера
-    struct servmsgbuf {
-        long mtype;
-        float finfo;
-    } myservbuf;
-
-    // Генерируем IPC-ключ
     if ((key = ftok(pathname, 0)) < 0) {
         printf("Can\'t generate key\n");
         exit(-1);
     }
 
-    // Пытаемся получить доступ к очереди сообщений
-    // или создать ее, если она не существует
     if ((msqid = msgget(key, 0666 | IPC_CREAT)) < 0) {
         printf("Can\'t get msqid\n");
         exit(-1);
     }
 
-    // Заполняем сообщение данными
-    mybuf.mtype = 1;
-    mybuf.info.pid = getpid();
 
-    // Считываем число
-    printf("Enter float number: ");
-    scanf("%f", &(mybuf.info.finfo));
+    srand(time(NULL));
 
-    // Определяем длину полезной части
-    len = sizeof(mybuf.info);
+    client.message.pid = getpid();
+    client.message.num = ((double) rand()) / RAND_MAX * 1000;
+    client.mtype = 1;
 
-    // Отправляем сообщение в очередь
-    if (msgsnd(msqid, (struct msgbuf *) &mybuf, len, 0) < 0) {
+    if (msgsnd(msqid, &client, sizeof(client.message), 0) < 0) {
         printf("Can\'t send message to queue\n");
         msgctl(msqid, IPC_RMID, (struct msqid_ds *) NULL);
         exit(-1);
     }
 
-    printf("Message from %d was sent.\n", getpid());
+    printf("Send message; type = %ld, message = '%lf'\n", client.mtype, client.message.num);
 
-    // Задаем максимально возможную длину полезной чати сообщения
-    maxlen = sizeof(myservbuf.finfo);
+    printf("Wait\n");
 
-    // Пробуем прочесть сообщение из очереди
-    if ((len = msgrcv(msqid, &myservbuf, maxlen, getpid(), 0)) < 0) {
-        printf("Can't receive message from queue\n");
+    if (msgrcv(msqid, &server, sizeof(server.message), getpid(), 0) < 0) {
+        printf("Can\'t receive message from queue.\n");
         exit(-1);
     }
 
-    printf("Response:\t%f\n", myservbuf.finfo);
+    printf("Message from the server: %lf\n", server.message.num);
 
     return 0;
 }
